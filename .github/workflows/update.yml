@@ -1,0 +1,39 @@
+name: Auto Update News
+
+on:
+  schedule:
+    # हरेक ६ घण्टामा आफैँ चल्ने (UTC समय)
+    - cron: '0 */6 * * *'
+  # हातैले बटन थिचेर चलाउन मिल्ने विकल्प
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Libraries
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run Scraper
+        run: |
+          python scraper.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "bot@github.com"
+          git add news.json
+          git commit -m "Auto-update: fresh news added" || exit 0
+          git push
